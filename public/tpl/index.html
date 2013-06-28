@@ -152,7 +152,7 @@
 				</div>
 			</div>
 		</div>
-		<div id="screenshot" data-bind="html:shotPath">
+		<div id="screenshot" data-bind="{html:shotPath}">
 			
 			
 		</div>
@@ -204,8 +204,8 @@
 			            success: function (data) {
 							$.unblockUI();
 							console.log(data);
-							var b64 = btoa(data);
-			                ShotviewModel.shotPath(b64);
+							
+			                ShotviewModel.shotPath(data);
 							
 			            }
 			        });
