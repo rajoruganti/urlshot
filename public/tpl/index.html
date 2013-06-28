@@ -1,0 +1,223 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>{% block title %}Promo{% endblock %}</title>
+
+  {% block head %}
+  	<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+	<title>index</title>
+	<meta name="generator" content="TextMate http://macromates.com/">
+	<meta name="author" content="Raj Oruganti">
+	<!-- Date: 2013-06-01 -->
+	<link href="css/bootstrap.css" rel="stylesheet">
+	<link href="//netdna.bootstrapcdn.com/twitter-bootstrap/2.3.1/css/bootstrap-combined.no-icons.min.css" rel="stylesheet">
+	<link href="//netdna.bootstrapcdn.com/font-awesome/3.1.1/css/font-awesome.css" rel="stylesheet">
+    <style>
+        body {
+            padding-top: 60px; /* 60px to make the container go all the way to the bottom of the topbar */
+        }
+    </style>
+    <link href="css/bootstrap-responsive.css" rel="stylesheet">
+    <link href="css/styles.css" rel="stylesheet">
+
+    <!-- Le HTML5 shim, for IE6-8 support of HTML5 elements -->
+    <!--[if lt IE 9]>
+    <script src="http://html5shim.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+
+    <script src="http://use.edgefonts.net/andika.js"></script>
+    <script src="http://use.edgefonts.net/arvo.js"></script>
+  {% endblock %}
+	{% block extrahead%}
+	{% endblock %}
+</head>
+<body>
+	{% block header %} 
+		<div class="header">
+			<div class="navbar navbar-inverse navbar-fixed-top" style="z-index: 10;">
+			    <div class="navbar-inner">
+			        <div class="container">
+			            <a class="btn btn-navbar" data-toggle="collapse" data-target=".nav-collapse">
+			                <span class="icon-bar"></span>
+			                <span class="icon-bar"></span>
+			                <span class="icon-bar"></span>
+			            </a>
+			            <a class="brand" href="/">scaptr</a>
+						
+
+			            <div class="nav-collapse collapse">
+
+
+
+			                <ul class="nav pull-right">
+			                    <li class="about-menu"><a href="#about" data-toggle="modal">About</a></li>
+			                    <li>
+									<a href= "#howItWorks"  role="button" data-toggle="modal">How it works</a>
+
+								</li>
+								<!--li>
+								{%if user%}
+								<a href="/account">{{user}}</a>
+								{%else%}
+								<a href="/auth/twitter"><img src="../css/img/sign-in-with-twitter-gray.png"/></a>  
+								{%endif%}
+								</li-->
+								<li class="dropdown">
+									{%if user%}
+										<div class="btn-group">
+										  <a class="btn dropdown-toggle" data-toggle="dropdown" href="#">
+										    {{user}}
+										    <span class="caret"></span>
+										  </a>
+										  <ul class="dropdown-menu">
+												<li><a href="/dashboard">Campaigns</a></li>
+												<li><a href="/profile">Profile</a></li>
+												<li><a href="/logout">Signout</a></li>
+										  </ul>
+										</div>
+
+									{%else%}
+								            <a class="dropdown-toggle" href="#" data-toggle="dropdown">Sign In <strong class="caret"></strong></a>
+								            <div id="auth" class="dropdown-menu" style="padding: 15px; padding-bottom: 0px;">
+												<form method="post" accept-charset="UTF-8" id="signinHome" class="signin">
+												  <input id="username" style="margin-bottom: 15px;" type="text" name="username" placeholder="email" size="30" />
+												  <input id="password" style="margin-bottom: 15px;" type="password" name="password" placeholder="password" size="30" />
+												  <input id="remember_me" style="float: left; margin-right: 10px;" type="checkbox" name="user[remember_me]" value="1" />
+												  <label class="string optional" for="user_remember_me"> Remember me</label>
+
+												  <input class="btn btn-primary" style="clear: left; width: 100%; height: 32px; font-size: 13px;" type="submit" name="commit" value="Sign In" />
+												
+
+												</form>
+								            </div>
+								{%endif%}
+								          </li>
+
+			                </ul>
+			            </div>
+			            <!--/.nav-collapse -->
+			        </div>
+			    </div>
+			</div>
+			<!-- How Modal -->
+			<div id="howItWorks" class="modal hide fade" tabindex="-1" role="dialog" aria-labelledby="howItWorksLabel" aria-hidden="true">
+			  <div class="modal-header">
+			    <button type="button" class="close" data-dismiss="modal" aria-hidden="true">×</button>
+			    <h3 id="myModalLabel">How it works</h3>
+			  </div>
+			  <div class="modal-body">
+			    <p>
+			    	<ul>
+			    		<li>
+			    			Input a URL, see the screenshot. Simple.
+			    		</li>
+					
+
+			    	</ul>
+			    </p>
+			  </div>
+			  <div class="modal-footer">
+			    <button class="btn" data-dismiss="modal" aria-hidden="true">OK. Got it.</button>
+			  </div>
+			</div>
+			<!-- About Modal -->
+			<div id="about" class="modal hide fade" tabindex="-1" role="dialog" aria-labelledby="howItWorksLabel" aria-hidden="true">
+			  <div class="modal-header">
+			    <button type="button" class="close" data-dismiss="modal" aria-hidden="true">×</button>
+			    <h3 id="myModalLabel">About</h3>
+			  </div>
+			  <div class="modal-body">
+			    <p>
+			    	Automate your screenshot taking
+				</p>
+			  </div>
+
+			</div>
+		</div>
+	
+	{% endblock %} <!-- end header-->
+	
+		<div class="container-fluid ">
+		          
+		    <div>
+	
+	{% block content %}
+		<div class="container">
+			<div class="row">
+				<div class="span12">
+					<form class="form-search">
+						<input type="text" class="input-medium search-query" id="url" name="url"/> <button type="submit" class="btn">Grab screenshot</button>
+					</form>
+				</div>
+			</div>
+		</div>
+		<div id="screenshot" data-bind="html:shotPath">
+			
+			
+		</div>
+	{% endblock %}
+	</div>
+	</div>
+	<script src="lib/jquery-1.8.2.min.js"></script>
+	<script src="lib/knockout-2.2.1.js"></script>
+	<script src="lib/bootstrap.min.js"></script>
+	<script src="lib/jquery.blockUI.js"></script>
+	<script src="lib/bootstrap-maxlength.min.js"></script>
+	<script type="text/javascript">
+			ko.bindingHandlers.stopBinding = {
+			    init: function() {
+			        return { controlsDescendantBindings: true };
+			    }        
+			};
+
+			//KO 2.1, now allows you to add containerless support for custom bindings
+			ko.virtualElements.allowedBindings.stopBinding = true;
+
+			var data = [];   
+
+			var ShotviewModel = {
+
+				shotPath : ko.observableArray(data)
+
+			};
+			
+		
+
+		ko.applyBindings(ShotviewModel);
+		$(document).ready(function(){
+			$('.form-search').live('submit', function(e){
+					e.preventDefault();
+					$.blockUI({ message: "<i class=\"icon-spinner icon-spin icon-large\"></i> grabbing..." });
+					var url = $(this).find('input[name="url"]').val();
+					console.log(url);
+			        $.ajax({
+						type: "POST",
+			            url: '/shoot/',
+						data: {'url':url},
+						beforeSend: function(data){
+						},
+						error: function(data){
+							console.log(data);
+						},
+			            success: function (data) {
+							$.unblockUI();
+							console.log(data);
+			                ShotviewModel.shotPath(data);
+							
+			            }
+			        });
+			});
+		});
+		
+			
+	
+	      
+	</script>
+	
+	
+	
+	{% block footer %} 
+	{% endblock %}
+</body>
+</html>

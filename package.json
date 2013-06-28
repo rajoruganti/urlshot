@@ -26,7 +26,9 @@
 
   "dependencies": {
     "express": "*",
-	"screenshot-as-a-service":"1.1.0"
+	"webshot":"0.5.1",
+	"swig":"0.14.0",
+	"phantomjs":"1.9.1-0"
   },
   "devDependencies": {},
   "bundleDependencies": [],

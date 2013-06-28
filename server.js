@@ -1,7 +1,10 @@
 #!/bin/env node
 //  OpenShift sample Node application
 var express = require('express');
-var fs      = require('fs');
+var fs      = require('fs'),
+	path = require('path');
+routes = require('./routes/index');
+
 
 
 /**
@@ -34,25 +37,7 @@ var SampleApp = function() {
     };
 
 
-    /**
-     *  Populate the cache.
-     */
-    self.populateCache = function() {
-        if (typeof self.zcache === "undefined") {
-            self.zcache = { 'index.html': '' };
-        }
-
-        //  Local cache for static content.
-        self.zcache['index.html'] = fs.readFileSync('./index.html');
-    };
-
-
-    /**
-     *  Retrieve entry (content) from cache.
-     *  @param {string} key  Key identifying content to retrieve from cache.
-     */
-    self.cache_get = function(key) { return self.zcache[key]; };
-
+   
 
     /**
      *  terminator === the termination handler
@@ -119,10 +104,7 @@ var SampleApp = function() {
                      '  <body>\n<br/>\n' + content + '</body>\n</html>');
         };
 
-        self.routes['/'] = function(req, res) {
-            res.set('Content-Type', 'text/html');
-            res.send(self.cache_get('index.html') );
-        };
+       
     };
 
 
@@ -131,9 +113,22 @@ var SampleApp = function() {
      *  the handlers.
      */
     self.initializeServer = function() {
-        self.createRoutes();
-        self.app = express.createServer();
+        
+        self.app = express();
+		self.app.configure(function () {
 
+			    self.app.use(express.logger('dev'));  /* 'default', 'short', 'tiny', 'dev' */
+			    self.app.use(express.bodyParser()),
+			    self.app.use(express.static(path.join(__dirname, 'public')));
+				self.app.use(express.cookieParser());
+				self.app.use(express.session({ secret: "topsecret" }));
+				//self.app.use(flash());
+				//self.app.use(passport.initialize());
+				//self.app.use(passport.session());
+			});
+		self.app.get('/',routes.home);
+		self.app.post('/shoot', routes.shoot);
+		self.createRoutes();
         //  Add handlers for the app (from the routes).
         for (var r in self.routes) {
             self.app.get(r, self.routes[r]);
@@ -146,7 +141,7 @@ var SampleApp = function() {
      */
     self.initialize = function() {
         self.setupVariables();
-        self.populateCache();
+        //self.populateCache();
         self.setupTerminationHandlers();
 
         // Create the express server and routes.
