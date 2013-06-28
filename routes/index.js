@@ -1,6 +1,6 @@
 var path = require('path');
 var tplPath = path.join(__dirname, '../public/tpl/');
-var shotPath = path.join(__dirname, '../public/data/')
+var shotPath = path.join(__dirname,  '../public/data/')
 var url = require('url');
 
 exports.home = function(req,res){
@@ -58,8 +58,20 @@ exports.shoot = function(req,res){
 	webshot(req.body.url, imgPath, options, function(err) {
 	  // screenshot now saved to flickr.jpeg
 		if(err){
-			res.send(err)
+			res.send("error");
 		}
+	/*	fs.readFile(imgPath, function (err, data) {
+		  		if (err) throw err;
+
+				res.writeHead(200, {
+					'Content-Type': 'image/png',
+					'Expires': 'Fri, 01 Jan 1990 00:00:00 GMT',
+		            		'Cache-Control': 'no-cache, no-store, max-age=0, must-revalidate',
+		            		'Pragma': 'no-cache'
+				});
+		     		res.end(data);
+			});
+			*/
 		res.send("<img src=\""+imgUrl+"\">");
 	});
 /*	webshot('google.com', "abcd.png",options, function(err, renderStream) {

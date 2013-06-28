@@ -152,8 +152,8 @@
 				</div>
 			</div>
 		</div>
-		<div id="screenshot" data-bind="html:shotPath">
-			
+		<div id="screenshot" >
+			<img data-bind="attr:{'src':'data:image/png;base64,'+shotPath()}">
 			
 		</div>
 	{% endblock %}
@@ -178,7 +178,7 @@
 
 			var ShotviewModel = {
 
-				shotPath : ko.observableArray(data)
+				shotPath : ko.observable()
 
 			};
 			
@@ -198,12 +198,14 @@
 						beforeSend: function(data){
 						},
 						error: function(data){
+							console.log("error");
 							console.log(data);
 						},
 			            success: function (data) {
 							$.unblockUI();
 							console.log(data);
-			                ShotviewModel.shotPath(data);
+							var b64 = btoa(data);
+			                ShotviewModel.shotPath(b64);
 							
 			            }
 			        });
