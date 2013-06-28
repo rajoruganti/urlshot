@@ -152,8 +152,8 @@
 				</div>
 			</div>
 		</div>
-		<div id="screenshot" >
-			<img data-bind="attr:{'src':'data:image/png;base64,'+shotPath()}">
+		<div id="screenshot" data-bind="html:shotPath">
+			
 			
 		</div>
 	{% endblock %}
