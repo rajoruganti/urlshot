@@ -29,4 +29,6 @@ if [ -f "${OPENSHIFT_REPO_DIR}"/package.json ]; then
    echo
    (cd "${OPENSHIFT_REPO_DIR}"; export TMPDIR="/tmp"; npm install -d)
 fi
+if [ ! -d $OPENSHIFT_DATA_DIR/data ]; then mkdir $OPENSHIFT_DATA_DIR/data fi
 
+ln -sf $OPENSHIFT_DATA_DIR/data $OPENSHIFT_REPO_DIR/public/data
