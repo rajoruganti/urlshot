@@ -68,8 +68,10 @@ exports.shoot = function(req,res){
 	});
 	*/
 	webshot('google.com', function(err, renderStream) {
-		if (err) return done(err);
-
+		if (err) {
+			console.log(err);
+			res.send(err);
+		}
 		var file = fs.createWriteStream(imgPath, {encoding: 'binary'});
 		renderStream.on('error', function(){
 				console.log("error in renderstream:"+error);
@@ -77,7 +79,7 @@ exports.shoot = function(req,res){
 		});
 
 		renderStream.on('data', function(data) {
-			
+			console.log("writing data to file:"+data.toString('binary'));
 			file.write(data.toString('binary'), 'binary');
 		});
 
