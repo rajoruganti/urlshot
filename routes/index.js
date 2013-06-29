@@ -81,11 +81,8 @@ exports.shoot = function(req,res){
 			file.write(data.toString('binary'), 'binary');
 		});
 
-		renderStream.on('end', function(err) {
-			if(err){
-				console.log("error on end");
-				res.send("error on end");
-			} 
+		renderStream.on('end', function() {
+		
 			fs.exists(imgPath, function(exists) {
 				if(exists == true){
 					console.log("serving from:"+imgUrl);
