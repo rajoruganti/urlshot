@@ -26,9 +26,9 @@
 
   "dependencies": {
     "express": "*",
-	"webshot":"0.5.1",
 	"swig":"0.14.0",
-	"phantomjs":"1.9.1-0"
+	"phantomjs":"1.9.1-0",
+	"phantom-proxy":"0.1.792"
   },
   "devDependencies": {},
   "bundleDependencies": [],

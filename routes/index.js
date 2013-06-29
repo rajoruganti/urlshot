@@ -2,6 +2,31 @@ var path = require('path');
 var tplPath = path.join(__dirname, '../public/tpl/');
 var shotPath = path.join(__dirname,  '../public/data/')
 var url = require('url');
+var exec = require('child_process').exec;
+
+function cmd_exec(cmd, args, options, cb_stdout, cb_end, cb_err) {
+	var spawn = require('child_process').spawn,
+	child = spawn(cmd, args, options),
+	me = this,
+	/*
+	me = this;
+	me.exit = 0;  // Send a cb to set 1 when cmd exits
+	child.stdout.on('data', function (data) { cb_stdout(me, data) });
+	child.stdout.on('end', function () { cb_end(me) });
+	*/
+	result = '';
+	child.stdout.on('data', function(data) {
+		result += data.toString();
+	});
+	child.on('exit', function(code) {
+		console.log("result:"+result);
+		return cb_end(me,result);	
+	});
+	child.on('error', function(err){
+		console.log("error");
+		return cb_err(me,err);
+	});
+}
 
 exports.home = function(req,res){
     var template  = require('swig');
@@ -25,7 +50,7 @@ exports.home = function(req,res){
 };
 
 exports.shoot = function(req,res){
-	var webshot = require('webshot');
+	//var webshot = require('webshot');
 	var options = {
 	  screenSize: {
 	    width: 320
@@ -67,6 +92,7 @@ exports.shoot = function(req,res){
 		res.send("<img src=\""+imgUrl+"\">");
 	});
 	*/
+	/*
 	webshot('google.com', function(err, renderStream) {
 		if (err) {
 			console.log(err);
@@ -97,5 +123,63 @@ exports.shoot = function(req,res){
 			});
 		});
 	});
+	*/
+	// let's try running phantom cli
+	//var cmd = "../node_modules/phantomjs/bin/phantomjs";
+	//console.log(cmd);
+	var options = {
+	encoding: 'utf8',
+	timeout: 7000,
+	maxBuffer: 200*1024,
+	killSignal: 'SIGTERM',
+	cwd: "./",
+	env: process.env
+	}
+	/*exec('phantomjs /Users/raj/Projects/test/js/phantomjs-1.9.1-macosx/examples/rasterize.js www.google.com /tmp/google.png', options, function(error, stdout,stderr){
+		if(error){
+			console.log(error);
+		}
+		else{
+			console.log("ok");
+		}
+		res.send("<img src=\""+imgUrl+"\">");
+	});
+	*/
+	var cmd = "/Users/raj/Projects/test/js/phantomjs-1.9.1-macosx/bin/phantomjs";
+	var rasterPath = "/Users/raj/Projects/test/js/phantomjs-1.9.1-macosx/examples/rasterize.js";
+	if(process.env.OPENSHIFT_DATA_DIR){
+		console.log("in openshift");
+		cmd = process.env.OPENSHIFT_DATA_DIR+"phantomjs-1.9.1-linux-x86_64/bin/phantomjs";
+		rasterPath = process.env.OPENSHIFT_DATA_DIR+"phantomjs-1.9.1-linux-x86_64/examples/rasterize.js";
+	}
+
 	
+	//cmd = "phantomjs";
+	var foo = new cmd_exec(cmd, [
+			rasterPath,
+			req.body.url,
+			imgPath
+		],
+		{
+			//stdio:"inherit",
+			cwd:'./',
+			env:process.env
+			//detached: true,
+		},
+	function (me, data) {
+		me.stdout += data.toString();
+		xtext1=me.stdout;
+		console.log("xtext1:"+xtext1);
+	},
+	  function (me,result) {
+		me.exit = 1;
+		console.log("me.result"+result);
+		xtext=result;
+		console.log("serving from:"+imgUrl);
+		res.send("<img src=\""+imgUrl+"\">");
+	},
+	function(me,err){
+		console.log(err);
+	}
+	);
 };
