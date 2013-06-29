@@ -57,7 +57,7 @@ exports.shoot = function(req,res){
 	console.log("saving to:"+imgPath);
 
 	var imgUrl = "/data/"+imgName
-	webshot(req.body.url, imgPath, options, function(err) {
+	/*webshot(req.body.url, imgPath, options, function(err) {
 	  // screenshot now saved to flickr.jpeg
 		if(err){
 			res.send("error");
@@ -66,19 +66,37 @@ exports.shoot = function(req,res){
 		console.log("serving from:"+imgUrl);
 		res.send("<img src=\""+imgUrl+"\">");
 	});
-/*	webshot('google.com', "abcd.png",options, function(err, renderStream) {
-		if(err){
-			res.send(err);
-		}
-		
-		var file = fs.createWriteStream(imgPath, {encoding: 'binary'});
-		renderStream.on('data', function(data) {
-	    	file.write(data.toString('binary'), 'binary', function(){
-				res.send("<img src=\"/data/abc.png\">");
-			});
-			
-	  	});
-	
+	*/
+	webshot('google.com', function(err, renderStream) {
+		if (err) return done(err);
 
-	});*/
+		var file = fs.createWriteStream(imgPath, {encoding: 'binary'});
+		renderStream.on('error', function(){
+				console.log("error in renderstream:"+error);
+				res.send("error rendering");
+		});
+
+		renderStream.on('data', function(data) {
+			
+			file.write(data.toString('binary'), 'binary');
+		});
+
+		renderStream.on('end', function(err) {
+			if(err){
+				console.log("error on end");
+				res.send("error on end");
+			} 
+			fs.exists(imgPath, function(exists) {
+				if(exists == true){
+					console.log("serving from:"+imgUrl);
+					res.send("<img src=\""+imgUrl+"\">");
+				}
+				else{
+					console.log("file not saved");
+					res.send("could not captr");
+				}
+			});
+		});
+	});
+	
 };
