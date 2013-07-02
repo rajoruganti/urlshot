@@ -29,7 +29,9 @@
 	"swig":"0.14.0",
 	"phantomjs":"1.9.1-0",
 	"phantom-proxy":"0.1.792",
-	"async":"0.2.9"
+	"async":"0.2.9",
+	"request":"2.21.0",
+	"goo.gl":"0.0.2"
   },
   "devDependencies": {},
   "bundleDependencies": [],

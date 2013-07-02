@@ -116,7 +116,6 @@ var SampleApp = function() {
         
         self.app = express();
 		self.app.configure(function () {
-
 			    self.app.use(express.logger('dev'));  /* 'default', 'short', 'tiny', 'dev' */
 			    self.app.use(express.bodyParser()),
 			    self.app.use(express.static(path.join(__dirname, 'public')));

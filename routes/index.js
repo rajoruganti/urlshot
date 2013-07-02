@@ -4,6 +4,8 @@ var shotPath = path.join(__dirname,  '../public/data/')
 var url = require('url');
 var exec = require('child_process').exec;
 var async = require('async');
+var request = require('request');
+var config = require('../config')
 
 function cmd_exec(cmd, args, options, cb_stdout, cb_end, cb_err) {
 	var spawn = require('child_process').spawn,
@@ -49,6 +51,8 @@ exports.home = function(req,res){
 	  extensions: {},
 	  tzOffset: 0
 	});
+	var conf = new config();
+	console.log(conf.host);
 	
 	var tmpl = template.compileFile(tplPath+'index.html');
 	renderedHTML= tmpl.render({
@@ -77,25 +81,35 @@ exports.shoot = function(req,res){
 	var imgThumbnailPath = shotPath+imgThumbnail;
 	
 	var imgUrl = "/data/"+imgName;
-	var thumbnail = req.body.thumbnail;
+	var imgThumbnailUrl = "/data/"+imgThumbnail;
+	var shortImgUrl="",
+		shortThumbnailUrl="";
+	var thumbnail = "true";
+	var orgText;
 	console.log(req.body);	
+	var u = req.body.url;
+	if (u && !u.match(/^http([s]?):\/\/.*/)) {
+	    u = 'http://' + u;
+	  }
 
 	// set paths
 	var cmd = "/Users/raj/Projects/test/js/phantomjs-1.9.1-macosx/bin/phantomjs";
-	var rasterPath = "/Users/raj/Projects/test/js/phantomjs-1.9.1-macosx/examples/rasterize.js";
+	//var rasterPath = "/Users/raj/Projects/test/js/phantomjs-1.9.1-macosx/examples/rasterize.js";
+	var rasterPath = "/Users/raj/Projects/urlshot/node_modules/phantomjs/lib/phantom/examples/rasterize.js";
 	var convertCmd = "convert";
 	if(process.env.OPENSHIFT_DATA_DIR){
 		console.log("in openshift");
 		cmd = process.env.OPENSHIFT_DATA_DIR+"phantomjs-1.9.1-linux-x86_64/bin/phantomjs";
-		rasterPath = process.env.OPENSHIFT_DATA_DIR+"phantomjs-1.9.1-linux-x86_64/examples/rasterize.js";
+		rasterPath = process.env.OPENSHIFT_REPO_DIR+"node_modules/phantomjs/lib/phantom/examples/rasterize.js";
 		convertCmd = "convert";
 	}
 	async.series([
+	
 		// grab the screenshot
 		function(callback){
 			var foo = new cmd_exec(cmd, [
 					rasterPath,
-					req.body.url,
+					u,
 					imgPath
 				],
 				{
@@ -203,11 +217,40 @@ exports.shoot = function(req,res){
 			else{
 				callback();
 			}
+		},
+		//shorten urls
+		function(callback){
+			//imgUrl = "/data/"+imgName;
+			// shorten urls
+			var conf = new config();
+			host = conf.host;
+			console.log("serving from:"+imgUrl);
+			var fullImgUrl = "http://"+host+imgUrl;
+			var googl = require('goo.gl');
+			// Shorten a long url and output the result
+			googl.shorten(fullImgUrl, function (shortUrl) {
+			    console.log(shortUrl);
+				shortImgUrl = shortUrl.id;
+				callback();
+			});
+			
+		},
+		//shorten thumb url
+		function(callback){
+			var fullThumbnailUrl = "http://"+host+imgThumbnailUrl
+			var googl = require('goo.gl');
+			// Shorten a long url and output the result
+			googl.shorten(fullThumbnailUrl, function (shortUrl) {
+			    console.log(shortUrl);
+				shortThumbnailUrl = shortUrl.id;
+				callback();
+			});
 		}
 		], function(err, result){
-			imgUrl = "/data/"+imgName;
-			console.log("serving from:"+imgUrl);
-			res.send("<img src=\""+imgUrl+"\">");
+		
+			res.send({"shot":shortImgUrl,"thumb":shortThumbnailUrl});
+			
+			//res.send({shot:"<img src=\""+imgUrl+"\">", thumb:"<img src=\""+imgThumbnailUrl+"\">"});
 		});
 	
 };

@@ -213,3 +213,7 @@ img{
 #screenshot{
 	text-align:center;
 }
+.screenshot{
+	border: 1px solid #ccc;
+	padding: 10px;
+}

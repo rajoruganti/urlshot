@@ -6,7 +6,7 @@
 
   {% block head %}
   	<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
-	<title>index</title>
+	<title>URLSHOT</title>
 	<meta name="generator" content="TextMate http://macromates.com/">
 	<meta name="author" content="Raj Oruganti">
 	<!-- Date: 2013-06-01 -->
@@ -149,16 +149,31 @@
 					<form class="form-search">
 						<input type="text" class="input-medium search-query" id="url" name="url"/> 
 						
-						<input type="checkbox" class="checkbox" id="thumbnail" name="thumbnail">Thumbnail</input>
-						<br/>
+						<!--input type="checkbox" class="checkbox" id="thumbnail" name="thumbnail">Thumbnail</input>
+						<br/-->
 						<button type="submit" class="btn">Grab screenshot</button>
 					</form>
 				</div>
 			</div>
 		</div>
-		<div id="screenshot" data-bind="{html:shotPath}">
-			
-			
+		
+		<div class="container-fluid">
+			<div class="row-fluid">
+				<div class="span12">
+					<div class="row-fluid">
+						<div class="span6">
+							<div class="screenshot" id="screenshot">
+								<img data-bind="attr:{src:shotPath}"/>
+							</div>
+						</div>
+						<div class="span6">
+							<div class="screenshot" id="screenshot-thumb">
+								<img data-bind="attr:{src:shotThumbnailPath}"/>
+							</div>
+						</div>
+					</div>
+				</div>
+			</div>
 		</div>
 	{% endblock %}
 	</div>
@@ -182,7 +197,8 @@
 
 			var ShotviewModel = {
 
-				shotPath : ko.observable()
+				shotPath : ko.observable(),
+				shotThumbnailPath : ko.observable()
 
 			};
 			
@@ -190,11 +206,17 @@
 
 		ko.applyBindings(ShotviewModel);
 		$(document).ready(function(){
+			$(".screenshot").hide();
+		
 			$('.form-search').live('submit', function(e){
 					e.preventDefault();
 					$.blockUI({ message: "<i class=\"icon-spinner icon-spin icon-large\"></i> grabbing..." });
 					var url = $(this).find('input[name="url"]').val();
 					console.log(url);
+				//	if (url && !url.match(/^http([s]?):\/\/.*/)) {
+				//	    url = 'http://' + url;
+				//	  }
+				
 					var thumbnail = false;
 					if ($("#thumbnail").is(":checked")) {  
 					    thumbnail = true;
@@ -213,8 +235,9 @@
 							$.unblockUI();
 							console.log(data);
 							
-			                ShotviewModel.shotPath(data);
-							
+			                ShotviewModel.shotPath(data.shot);
+							ShotviewModel.shotThumbnailPath(data.thumb);
+							$(".screenshot").show();
 			            }
 			        });
 			});
