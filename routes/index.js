@@ -20,13 +20,20 @@ function cmd_exec(cmd, args, options, cb_stdout, cb_end, cb_err) {
 		result += data.toString();
 	});
 	child.on('exit', function(code) {
-		console.log("result:"+result);
+		//console.log("result:"+result);
 		return cb_end(me,result);	
 	});
 	child.on('error', function(err){
 		console.log("error");
 		return cb_err(me,err);
 	});
+	child.stderr.on('data', function (data) {
+	    console.log('stderr: ' + data);
+	});
+//	spawn.on('error', function(data){
+//		console.log("spawn error:"+data);
+//		return cb_err(me, data);
+//	});
 }
 
 exports.home = function(req,res){
@@ -76,7 +83,7 @@ exports.shoot = function(req,res){
 	// set paths
 	var cmd = "/Users/raj/Projects/test/js/phantomjs-1.9.1-macosx/bin/phantomjs";
 	var rasterPath = "/Users/raj/Projects/test/js/phantomjs-1.9.1-macosx/examples/rasterize.js";
-	var convertCmd = "/opt/ImageMagick/bin/convert";
+	var convertCmd = "convert";
 	if(process.env.OPENSHIFT_DATA_DIR){
 		console.log("in openshift");
 		cmd = process.env.OPENSHIFT_DATA_DIR+"phantomjs-1.9.1-linux-x86_64/bin/phantomjs";
@@ -99,8 +106,8 @@ exports.shoot = function(req,res){
 				},
 			function (me, data) {
 				me.stdout += data.toString();
-				xtext1=me.stdout;
-				console.log("xtext1:"+xtext1);
+				//xtext1=me.stdout;
+				//console.log("xtext1:"+xtext1);
 			},
 			  function (me,result) {
 				console.log("saved to:"+imgPath);
@@ -120,13 +127,14 @@ exports.shoot = function(req,res){
 				imgName = imgThumbnail;
 				var crop = " -crop 1024x768+0+0";
 				var filter = " -filter Lanczos -thumbnail 200x150";
-				var cmd1=convertCmd+" \""+imgPath+"\ " +crop+ " \""+imgPath+"\"";
-				console.log(cmd1);
+				//var cmd1=convertCmd+" \""+imgPath+"\" " +crop+ " \""+imgPath+"\" ";
+				//console.log(cmd1);
 				//var cmd2=convertCmd+" \""+imgPath+"\""+  "\""+imgThumbnailPath+"\""; 
 				var foo = new cmd_exec(convertCmd, [
-					" \""+imgPath+"\"",
-					crop,
-					" \""+imgPath+"\""
+					"-verbose",
+					imgPath,
+					"-crop","1024x768+0+0",
+					imgPath
 					],
 					{
 						//stdio:"inherit",
@@ -136,12 +144,12 @@ exports.shoot = function(req,res){
 					},
 				function (me, data) {
 					me.stdout += data.toString();
-					xtext1=me.stdout;
-					console.log("xtext1:"+xtext1);
+					//xtext1=me.stdout;
+					//console.log("xtext1:"+xtext1);
 				},
 				  function (me,result) {
-
-					// convert to thumbnail if required
+					console.log("done cropping:"+me);
+					
 					callback();
 
 				},
@@ -161,12 +169,14 @@ exports.shoot = function(req,res){
 				//var crop = " -crop 1024x768+0+0";
 				var filter = " -filter Lanczos -thumbnail 200x150";
 				//var cmd1=convertCmd+" \""+imgPath+"\" "+ "\""+imgPath+"\"";
-				var cmd2=convertCmd+" \""+imgPath+"\" "+filter+  " \" "+imgThumbnailPath+"\""; 
-				console.log(cmd2);
+				//var cmd2=convertCmd+" \""+imgPath+"\" "+filter+  " \""+imgThumbnailPath+"\""; 
+				//console.log(cmd2);
 				var foo = new cmd_exec(convertCmd, [
-					" \""+imgPath+"\"",
-					filter,
-					" \""+imgThumbnailPath+"\""
+					"-verbose",
+					imgPath,
+					"-filter","Lanczos",
+					"-thumbnail","200x150",
+					imgThumbnailPath
 					],
 					{
 						//stdio:"inherit",
@@ -176,17 +186,16 @@ exports.shoot = function(req,res){
 					},
 				function (me, data) {
 					me.stdout += data.toString();
-					xtext1=me.stdout;
-					console.log("xtext1:"+xtext1);
+					//xtext1=me.stdout;
+					//console.log("xtext1:"+xtext1);
 				},
 				  function (me,result) {
-
-					// convert to thumbnail if required
+					console.log("done creating thumbnail:"+me)
 					callback();
 
 				},
 				function(me,err){
-					console.log(err);
+					console.log("error:"+err);
 					callback();
 				}
 					);
