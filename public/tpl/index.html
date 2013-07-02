@@ -147,7 +147,11 @@
 			<div class="row">
 				<div class="span12">
 					<form class="form-search">
-						<input type="text" class="input-medium search-query" id="url" name="url"/> <button type="submit" class="btn">Grab screenshot</button>
+						<input type="text" class="input-medium search-query" id="url" name="url"/> 
+						
+						<input type="checkbox" class="checkbox" id="thumbnail" name="thumbnail">Thumbnail</input>
+						<br/>
+						<button type="submit" class="btn">Grab screenshot</button>
 					</form>
 				</div>
 			</div>
@@ -191,10 +195,14 @@
 					$.blockUI({ message: "<i class=\"icon-spinner icon-spin icon-large\"></i> grabbing..." });
 					var url = $(this).find('input[name="url"]').val();
 					console.log(url);
+					var thumbnail = false;
+					if ($("#thumbnail").is(":checked")) {  
+					    thumbnail = true;
+					} 
 			        $.ajax({
 						type: "POST",
 			            url: '/shoot/',
-						data: {'url':url},
+						data: {'url':url,'thumbnail':thumbnail},
 						beforeSend: function(data){
 						},
 						error: function(data){

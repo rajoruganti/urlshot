@@ -3,6 +3,7 @@ var tplPath = path.join(__dirname, '../public/tpl/');
 var shotPath = path.join(__dirname,  '../public/data/')
 var url = require('url');
 var exec = require('child_process').exec;
+var async = require('async');
 
 function cmd_exec(cmd, args, options, cb_stdout, cb_end, cb_err) {
 	var spawn = require('child_process').spawn,
@@ -50,21 +51,7 @@ exports.home = function(req,res){
 };
 
 exports.shoot = function(req,res){
-	//var webshot = require('webshot');
-	var options = {
-	  screenSize: {
-	    width: 320
-	  , height: 480
-	  }
-	, shotSize: {
-	    width: 320
-	  , height: 'all'
-	  }
-	, userAgent: 'Mozilla/5.0 (iPhone; U; CPU iPhone OS 3_2 like Mac OS X; en-us)'
-	    + ' AppleWebKit/531.21.20 (KHTML, like Gecko) Mobile/7B298g'
-
 	
-	}
 	var fs = require('fs');
 	var obj = {
 	  name: req.body.url
@@ -79,107 +66,141 @@ exports.shoot = function(req,res){
 	timestamp = new Date().getTime();
 	var imgName = host+"_"+timestamp+".png"
 	var imgPath = shotPath+imgName;
-	console.log("saving to:"+imgPath);
+	var imgThumbnail = host+"_thumbnail_"+timestamp+".png";
+	var imgThumbnailPath = shotPath+imgThumbnail;
+	
+	var imgUrl = "/data/"+imgName;
+	var thumbnail = req.body.thumbnail;
+	console.log(req.body);	
 
-	var imgUrl = "/data/"+imgName
-	/*webshot(req.body.url, imgPath, options, function(err) {
-	  // screenshot now saved to flickr.jpeg
-		if(err){
-			res.send("error");
-		}
-
-		console.log("serving from:"+imgUrl);
-		res.send("<img src=\""+imgUrl+"\">");
-	});
-	*/
-	/*
-	webshot('google.com', function(err, renderStream) {
-		if (err) {
-			console.log(err);
-			res.send(err);
-		}
-		var file = fs.createWriteStream(imgPath, {encoding: 'binary'});
-		renderStream.on('error', function(){
-				console.log("error in renderstream:"+error);
-				res.send("error rendering");
-		});
-
-		renderStream.on('data', function(data) {
-			console.log("writing data to file:"+data.toString('binary'));
-			file.write(data.toString('binary'), 'binary');
-		});
-
-		renderStream.on('end', function() {
-		
-			fs.exists(imgPath, function(exists) {
-				if(exists == true){
-					console.log("serving from:"+imgUrl);
-					res.send("<img src=\""+imgUrl+"\">");
-				}
-				else{
-					console.log("file not saved");
-					res.send("could not captr");
-				}
-			});
-		});
-	});
-	*/
-	// let's try running phantom cli
-	//var cmd = "../node_modules/phantomjs/bin/phantomjs";
-	//console.log(cmd);
-	var options = {
-	encoding: 'utf8',
-	timeout: 7000,
-	maxBuffer: 200*1024,
-	killSignal: 'SIGTERM',
-	cwd: "./",
-	env: process.env
-	}
-	/*exec('phantomjs /Users/raj/Projects/test/js/phantomjs-1.9.1-macosx/examples/rasterize.js www.google.com /tmp/google.png', options, function(error, stdout,stderr){
-		if(error){
-			console.log(error);
-		}
-		else{
-			console.log("ok");
-		}
-		res.send("<img src=\""+imgUrl+"\">");
-	});
-	*/
+	// set paths
 	var cmd = "/Users/raj/Projects/test/js/phantomjs-1.9.1-macosx/bin/phantomjs";
 	var rasterPath = "/Users/raj/Projects/test/js/phantomjs-1.9.1-macosx/examples/rasterize.js";
+	var convertCmd = "/opt/ImageMagick/bin/convert";
 	if(process.env.OPENSHIFT_DATA_DIR){
 		console.log("in openshift");
 		cmd = process.env.OPENSHIFT_DATA_DIR+"phantomjs-1.9.1-linux-x86_64/bin/phantomjs";
 		rasterPath = process.env.OPENSHIFT_DATA_DIR+"phantomjs-1.9.1-linux-x86_64/examples/rasterize.js";
+		convertCmd = "convert";
 	}
-
-	
-	//cmd = "phantomjs";
-	var foo = new cmd_exec(cmd, [
-			rasterPath,
-			req.body.url,
-			imgPath
-		],
-		{
-			//stdio:"inherit",
-			cwd:'./',
-			env:process.env
-			//detached: true,
+	async.series([
+		// grab the screenshot
+		function(callback){
+			var foo = new cmd_exec(cmd, [
+					rasterPath,
+					req.body.url,
+					imgPath
+				],
+				{
+					//stdio:"inherit",
+					cwd:'./',
+					env:process.env
+					//detached: true,
+				},
+			function (me, data) {
+				me.stdout += data.toString();
+				xtext1=me.stdout;
+				console.log("xtext1:"+xtext1);
+			},
+			  function (me,result) {
+				console.log("saved to:"+imgPath);
+				// convert to thumbnail if required
+				callback();
+				
+			},
+			function(me,err){
+				console.log(err);
+			}
+			);
 		},
-	function (me, data) {
-		me.stdout += data.toString();
-		xtext1=me.stdout;
-		console.log("xtext1:"+xtext1);
-	},
-	  function (me,result) {
-		me.exit = 1;
-		console.log("me.result"+result);
-		xtext=result;
-		console.log("serving from:"+imgUrl);
-		res.send("<img src=\""+imgUrl+"\">");
-	},
-	function(me,err){
-		console.log(err);
-	}
-	);
+		// crop the image to generate a thumbnail if required
+		function(callback){
+			if(thumbnail == 'true'){
+				console.log("cropping for thumbnail");
+				imgName = imgThumbnail;
+				var crop = " -crop 1024x768+0+0";
+				var filter = " -filter Lanczos -thumbnail 200x150";
+				var cmd1=convertCmd+" \""+imgPath+"\ " +crop+ " \""+imgPath+"\"";
+				console.log(cmd1);
+				//var cmd2=convertCmd+" \""+imgPath+"\""+  "\""+imgThumbnailPath+"\""; 
+				var foo = new cmd_exec(convertCmd, [
+					" \""+imgPath+"\"",
+					crop,
+					" \""+imgPath+"\""
+					],
+					{
+						//stdio:"inherit",
+						cwd:'./',
+						env:process.env
+						//detached: true,
+					},
+				function (me, data) {
+					me.stdout += data.toString();
+					xtext1=me.stdout;
+					console.log("xtext1:"+xtext1);
+				},
+				  function (me,result) {
+
+					// convert to thumbnail if required
+					callback();
+
+				},
+				function(me,err){
+					console.log(err);
+				}
+					);
+			}
+			else{
+				callback();
+			}
+		},
+		function(callback){
+			if(thumbnail == 'true'){
+				console.log("generating thumbnail");
+				imgName = imgThumbnail;
+				//var crop = " -crop 1024x768+0+0";
+				var filter = " -filter Lanczos -thumbnail 200x150";
+				//var cmd1=convertCmd+" \""+imgPath+"\" "+ "\""+imgPath+"\"";
+				var cmd2=convertCmd+" \""+imgPath+"\" "+filter+  " \" "+imgThumbnailPath+"\""; 
+				console.log(cmd2);
+				var foo = new cmd_exec(convertCmd, [
+					" \""+imgPath+"\"",
+					filter,
+					" \""+imgThumbnailPath+"\""
+					],
+					{
+						//stdio:"inherit",
+						cwd:'./',
+						env:process.env
+						//detached: true,
+					},
+				function (me, data) {
+					me.stdout += data.toString();
+					xtext1=me.stdout;
+					console.log("xtext1:"+xtext1);
+				},
+				  function (me,result) {
+
+					// convert to thumbnail if required
+					callback();
+
+				},
+				function(me,err){
+					console.log(err);
+					callback();
+				}
+					);
+			}
+			else{
+				callback();
+			}
+		}
+		], function(err, result){
+			imgUrl = "/data/"+imgName;
+			console.log("serving from:"+imgUrl);
+			res.send("<img src=\""+imgUrl+"\">");
+		});
+	
 };
+
+

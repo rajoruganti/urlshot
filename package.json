@@ -28,7 +28,8 @@
     "express": "*",
 	"swig":"0.14.0",
 	"phantomjs":"1.9.1-0",
-	"phantom-proxy":"0.1.792"
+	"phantom-proxy":"0.1.792",
+	"async":"0.2.9"
   },
   "devDependencies": {},
   "bundleDependencies": [],
