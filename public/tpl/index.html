@@ -171,6 +171,12 @@
 								<img data-bind="attr:{src:shotThumbnailPath}"/>
 							</div>
 						</div>
+						<div id="timeout" class="errors">
+							The site is taking too long to respond. Please try again later.
+						</div>
+						<div id="error" class="errors">
+							A system error occurred. Please try again later.
+						</div>
 					</div>
 				</div>
 			</div>
@@ -198,7 +204,8 @@
 			var ShotviewModel = {
 
 				shotPath : ko.observable(),
-				shotThumbnailPath : ko.observable()
+				shotThumbnailPath : ko.observable(),
+				shotStatus: ko.observable()
 
 			};
 			
@@ -207,8 +214,11 @@
 		ko.applyBindings(ShotviewModel);
 		$(document).ready(function(){
 			$(".screenshot").hide();
+			$(".errors").hide();
 		
 			$('.form-search').live('submit', function(e){
+					$(".screenshot").hide();
+					$(".errors").hide();
 					e.preventDefault();
 					$.blockUI({ message: "<i class=\"icon-spinner icon-spin icon-large\"></i> grabbing..." });
 					var url = $(this).find('input[name="url"]').val();
@@ -234,10 +244,19 @@
 			            success: function (data) {
 							$.unblockUI();
 							console.log(data);
-							
+							ShotviewModel.shotStatus(data.status);
 			                ShotviewModel.shotPath(data.shot);
 							ShotviewModel.shotThumbnailPath(data.thumb);
-							$(".screenshot").show();
+							if(data.status == "1"){
+								$("#timeout").show();
+							}
+							else if(data.status == "0"){
+								$("#error").show();
+							}
+							else{
+								$(".screenshot").show();
+							}
+							
 			            }
 			        });
 			});

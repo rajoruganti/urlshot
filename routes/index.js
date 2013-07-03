@@ -71,9 +71,13 @@ exports.shoot = function(req,res){
 	var shotUrl=JSON.stringify(obj);
 	console.log(shotUrl);
 	//var shotUrl = req.body.url;
-	var parts = url.parse(req.body.url, true);
+	var u = req.body.url;
+	if (u && !u.match(/^http([s]?):\/\/.*/)) {
+	    u = 'http://' + u;
+	  }
+	var parts = url.parse(u, true);
 	host=parts.host;
-	console.log("grabbing:"+host);
+	//console.log("grabbing:"+host);
 	timestamp = new Date().getTime();
 	var imgName = host+"_"+timestamp+".png"
 	var imgPath = shotPath+imgName;
@@ -86,11 +90,9 @@ exports.shoot = function(req,res){
 		shortThumbnailUrl="";
 	var thumbnail = "true";
 	var orgText;
+	var shotStatus="0";
 	console.log(req.body);	
-	var u = req.body.url;
-	if (u && !u.match(/^http([s]?):\/\/.*/)) {
-	    u = 'http://' + u;
-	  }
+	
 
 	// set paths
 	var cmd = "/Users/raj/Projects/test/js/phantomjs-1.9.1-macosx/bin/phantomjs";
@@ -104,13 +106,33 @@ exports.shoot = function(req,res){
 		convertCmd = "convert";
 	}
 	async.series([
-	
+		// get the page
+/*		function(callback){
+			var request = require('request');
+			var ua = "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_7_5) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/27.0.1453.110 Safari/537.36";
+			request({ method: 'GET' ,uri: u, headers: {'User-Agent': ua}, followAllRedirects:true}, function (error, response, body) {
+				if(error){
+			        console.log(error);
+					res.send({doc:orgText,xtext:"<html><body><div>"+error.stack+"</div></body</html>"});
+					callback();
+				} else {
+					//store the retreived text in a var
+					orgText = body;
+					//console.log(response.headers);
+					//console.log(response.request.uri);
+					//console.log("fetched the url:" + u + "- got body:"+orgText);
+					callback();
+				}
+
+			});
+		},*/
 		// grab the screenshot
 		function(callback){
 			var foo = new cmd_exec(cmd, [
 					rasterPath,
 					u,
-					imgPath
+					imgPath,
+					"--ignore-ssl-errors=yes"
 				],
 				{
 					//stdio:"inherit",
@@ -120,11 +142,14 @@ exports.shoot = function(req,res){
 				},
 			function (me, data) {
 				me.stdout += data.toString();
-				//xtext1=me.stdout;
-				//console.log("xtext1:"+xtext1);
+				xtext1=me.stdout;
+				console.log("xtext1:"+xtext1);
 			},
 			  function (me,result) {
 				console.log("saved to:"+imgPath);
+				console.log(result);
+				shotStatus=result;
+				shotStatus = shotStatus.replace(/(\r\n|\n|\r)/gm,"");
 				// convert to thumbnail if required
 				callback();
 				
@@ -247,9 +272,8 @@ exports.shoot = function(req,res){
 			});
 		}
 		], function(err, result){
-		
-			res.send({"shot":shortImgUrl,"thumb":shortThumbnailUrl});
 			
+			res.send({"shot":shortImgUrl,"thumb":shortThumbnailUrl,"status":shotStatus});
 			//res.send({shot:"<img src=\""+imgUrl+"\">", thumb:"<img src=\""+imgThumbnailUrl+"\">"});
 		});
 	
