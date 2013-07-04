@@ -163,12 +163,28 @@
 					<div class="row-fluid">
 						<div class="span6">
 							<div class="screenshot" id="screenshot">
+								<span class="label label-info shot-label">full</span>
 								<img data-bind="attr:{src:shotPath}"/>
+								
 							</div>
 						</div>
-						<div class="span6">
-							<div class="screenshot" id="screenshot-thumb">
-								<img data-bind="attr:{src:shotThumbnailPath}"/>
+						<div class="span6" class="screenshot">
+							<div class="row-fluid">
+									<div class="span4">
+										<div class="screenshot" id="screenshot-crop">
+											<img data-bind="attr:{src:shotCropPath}"/>
+											<span class="label label-info shot-label">1024x768</span>
+										</div>
+
+									</div>
+								<div class="span2">
+									<div class="screenshot" id="screenshot-thumb">
+										<img data-bind="attr:{src:shotThumbnailPath}"/>
+										<span class="label label-info shot-label">200x150</span>
+									</div>
+									
+								</div>
+							
 							</div>
 						</div>
 						<div id="timeout" class="errors">
@@ -205,6 +221,7 @@
 
 				shotPath : ko.observable(),
 				shotThumbnailPath : ko.observable(),
+				shotCropPath : ko.observable(),
 				shotStatus: ko.observable()
 
 			};
@@ -247,6 +264,7 @@
 							ShotviewModel.shotStatus(data.status);
 			                ShotviewModel.shotPath(data.shot);
 							ShotviewModel.shotThumbnailPath(data.thumb);
+							ShotviewModel.shotCropPath(data.crop);
 							if(data.status == "1"){
 								$("#timeout").show();
 							}

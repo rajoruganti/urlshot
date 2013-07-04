@@ -216,4 +216,12 @@ img{
 .screenshot{
 	border: 1px solid #ccc;
 	padding: 10px;
+	position: relative;
+    margin: 0 auto;
+    display: table;
+}
+.shot-label {
+  position: absolute;      
+  bottom: 5px;
+  right: 5px;
 }

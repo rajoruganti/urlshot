@@ -30,7 +30,7 @@ function cmd_exec(cmd, args, options, cb_stdout, cb_end, cb_err) {
 		return cb_err(me,err);
 	});
 	child.stderr.on('data', function (data) {
-	    console.log('stderr: ' + data);
+	    //console.log('stderr: ' + data);
 	});
 //	spawn.on('error', function(data){
 //		console.log("spawn error:"+data);
@@ -83,28 +83,57 @@ exports.shoot = function(req,res){
 	var imgPath = shotPath+imgName;
 	var imgThumbnail = host+"_thumbnail_"+timestamp+".png";
 	var imgThumbnailPath = shotPath+imgThumbnail;
+	var imgCrop = host+"_crop_"+timestamp+".png";
+	var imgCropPath = shotPath+imgCrop;
 	
 	var imgUrl = "/data/"+imgName;
 	var imgThumbnailUrl = "/data/"+imgThumbnail;
+	var imgCropUrl = "/data/"+imgCrop;
+	
 	var shortImgUrl="",
-		shortThumbnailUrl="";
+		shortThumbnailUrl="",
+		shortCropUrl="";
+	
+	
 	var thumbnail = "true";
 	var orgText;
 	var shotStatus="0";
 	console.log(req.body);	
 	
+	// Default options
+	var defaults = {
+	  windowSize: {
+	    width: 1024
+	  , height: 768
+	  }
+	, shotSize: {
+	    width: 'all'
+	  , height: 'all'
+	  }
+	, script: function() {}
+	, paperSize: ''
+	, userAgent: 'Mozilla/5.0 (X11; Linux i686; rv:18.0) Gecko/20100101 Firefox/18.0'
+	, streamType: 'png'
+	, siteType: 'url'
+	, phantomPath: 'phantomjs'
+	, renderDelay: 200
+	, timeout: 10
+	, takeShotOnCallback: false
+	, ignoreSslErrors: "--ignore-ssl-errors=yes"
+	};
 
 	// set paths
 	var cmd = "/Users/raj/Projects/test/js/phantomjs-1.9.1-macosx/bin/phantomjs";
 	//var rasterPath = "/Users/raj/Projects/test/js/phantomjs-1.9.1-macosx/examples/rasterize.js";
-	var rasterPath = "/Users/raj/Projects/urlshot/node_modules/phantomjs/lib/phantom/examples/rasterize.js";
+	var rasterScript = "/Users/raj/Projects/urlshot/node_modules/phantomjs/lib/phantom/examples/rasterize.js";
 	var convertCmd = "convert";
 	if(process.env.OPENSHIFT_DATA_DIR){
 		console.log("in openshift");
 		cmd = process.env.OPENSHIFT_DATA_DIR+"phantomjs-1.9.1-linux-x86_64/bin/phantomjs";
-		rasterPath = process.env.OPENSHIFT_REPO_DIR+"node_modules/phantomjs/lib/phantom/examples/rasterize.js";
+		rasterScript = process.env.OPENSHIFT_REPO_DIR+"node_modules/phantomjs/lib/phantom/examples/rasterize.js";
 		convertCmd = "convert";
 	}
+	var crop = false;
 	async.series([
 		// get the page
 /*		function(callback){
@@ -128,12 +157,27 @@ exports.shoot = function(req,res){
 		},*/
 		// grab the screenshot
 		function(callback){
-			var foo = new cmd_exec(cmd, [
-					rasterPath,
-					u,
-					imgPath,
-					"--ignore-ssl-errors=yes"
-				],
+			
+			var phantomArgs = [
+			    rasterScript
+			  , u
+			  , imgPath
+			  , defaults.windowSize.width
+			  , defaults.windowSize.height
+			  , defaults.shotSize.width
+			  , defaults.shotSize.height
+			  , defaults.userAgent
+			  , defaults.script
+			  , defaults.paperSize
+			  , defaults.streamType
+			  , defaults.siteType
+			  , defaults.renderDelay
+			  , defaults.takeShotOnCallback
+			  , defaults.ignoreSslErrors
+			  ].map(function(arg) {
+			    return arg.toString();
+			  });
+			var foo = new cmd_exec(cmd, phantomArgs,
 				{
 					//stdio:"inherit",
 					cwd:'./',
@@ -161,11 +205,12 @@ exports.shoot = function(req,res){
 		},
 		// crop the image to generate a thumbnail if required
 		function(callback){
+			
 			if(thumbnail == 'true'){
 				console.log("cropping for thumbnail");
 				imgName = imgThumbnail;
 				var crop = " -crop 1024x768+0+0";
-				var filter = " -filter Lanczos -thumbnail 200x150";
+				//var filter = " -filter Lanczos -thumbnail 200x150";
 				//var cmd1=convertCmd+" \""+imgPath+"\" " +crop+ " \""+imgPath+"\" ";
 				//console.log(cmd1);
 				//var cmd2=convertCmd+" \""+imgPath+"\""+  "\""+imgThumbnailPath+"\""; 
@@ -173,7 +218,7 @@ exports.shoot = function(req,res){
 					"-verbose",
 					imgPath,
 					"-crop","1024x768+0+0",
-					imgPath
+					imgCropPath
 					],
 					{
 						//stdio:"inherit",
@@ -188,7 +233,7 @@ exports.shoot = function(req,res){
 				},
 				  function (me,result) {
 					console.log("done cropping:"+me);
-					
+				
 					callback();
 
 				},
@@ -200,19 +245,20 @@ exports.shoot = function(req,res){
 			else{
 				callback();
 			}
+		
 		},
 		function(callback){
 			if(thumbnail == 'true'){
 				console.log("generating thumbnail");
 				imgName = imgThumbnail;
 				//var crop = " -crop 1024x768+0+0";
-				var filter = " -filter Lanczos -thumbnail 200x150";
+				//var filter = " -filter Lanczos -thumbnail 40%";
 				//var cmd1=convertCmd+" \""+imgPath+"\" "+ "\""+imgPath+"\"";
 				//var cmd2=convertCmd+" \""+imgPath+"\" "+filter+  " \""+imgThumbnailPath+"\""; 
 				//console.log(cmd2);
 				var foo = new cmd_exec(convertCmd, [
 					"-verbose",
-					imgPath,
+					imgCropPath,
 					"-filter","Lanczos",
 					"-thumbnail","200x150",
 					imgThumbnailPath
@@ -254,7 +300,7 @@ exports.shoot = function(req,res){
 			var googl = require('goo.gl');
 			// Shorten a long url and output the result
 			googl.shorten(fullImgUrl, function (shortUrl) {
-			    console.log(shortUrl);
+			    //console.log(shortUrl);
 				shortImgUrl = shortUrl.id;
 				callback();
 			});
@@ -266,14 +312,25 @@ exports.shoot = function(req,res){
 			var googl = require('goo.gl');
 			// Shorten a long url and output the result
 			googl.shorten(fullThumbnailUrl, function (shortUrl) {
-			    console.log(shortUrl);
+			    //console.log(shortUrl);
 				shortThumbnailUrl = shortUrl.id;
+				callback();
+			});
+		},
+		//shorten thumb url
+		function(callback){
+			var fullThumbnailUrl = "http://"+host+imgCropUrl
+			var googl = require('goo.gl');
+			// Shorten a long url and output the result
+			googl.shorten(fullThumbnailUrl, function (shortUrl) {
+			    //console.log(shortUrl);
+				shortCropUrl = shortUrl.id;
 				callback();
 			});
 		}
 		], function(err, result){
 			
-			res.send({"shot":shortImgUrl,"thumb":shortThumbnailUrl,"status":shotStatus});
+			res.send({"shot":shortImgUrl,"crop":shortCropUrl,"thumb":shortThumbnailUrl,"status":shotStatus});
 			//res.send({shot:"<img src=\""+imgUrl+"\">", thumb:"<img src=\""+imgThumbnailUrl+"\">"});
 		});
 	
