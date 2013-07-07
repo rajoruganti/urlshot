@@ -95,7 +95,7 @@ exports.shoot = function(req,res){
 		shortCropUrl="";
 	
 	
-	var thumbnail = "true";
+	var thumbnail = req.body.thumb;
 	var orgText;
 	var shotStatus="0";
 	console.log(req.body);	
